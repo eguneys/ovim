@@ -7,7 +7,7 @@ const key_motion = ['h', 'j', 'k', 'l', 'b', 'w', 'e', '$', '0']
 
 function out_of_ctx(p: string, n: string) {
   let w = !!p.match(/[a-zA-Z0-9]/),
-    wn = !!n.match(/[a-zA-Z0-9]/)
+    wn = !!n.match(/[a-zA-Z0-9 ]/)
 
   return (w !== wn)
 }
@@ -161,7 +161,6 @@ export class Pen {
 
     createEffect(on(this._mode[0], (m, pm) => {
       if (m === 1 && pm === 2) {
-        console.log(m)
         this.lines.escape_insert()
       } else if (m === 2 && pm === 1) {
         this.lines.begin_insert()
@@ -225,6 +224,9 @@ export class Pen {
       case 'Escape':
         this.lines.escape()
         break
+      case 'p':
+        this.lines.put()
+        break
       case 'u':
         this.lines.undo()
         break
@@ -262,6 +264,7 @@ export const make_lines = (msg: string) => {
 
   let a_undos = make_array([], _ => _)
 
+  let _yank = createSignal()
 
   let a_insert_undo = []
 
@@ -317,6 +320,8 @@ export const make_lines = (msg: string) => {
         removed = _.splice(y, y2-y+1)
       })
       _cursor.y = Math.min(y, read(_arr).length - 1)
+
+      owrite(_yank, removed)
     })
 
     return () => {
@@ -336,6 +341,7 @@ export const make_lines = (msg: string) => {
       _[y] = line.slice(0, x) + line.slice(x2)
     })
 
+    owrite(_yank, removed)
     return () => {
       write(_arr, _ => {
         let line = _[y]
@@ -345,6 +351,48 @@ export const make_lines = (msg: string) => {
   }
 
   return {
+    put() {
+      let yank = read(_yank)
+
+      if (Array.isArray(yank)) {
+        let _cursor_y = _cursor.y
+        let _cursor_x = m_x()
+
+
+        a_undos.push(() => {
+          write(_arr, _ => {
+            _.splice(_cursor_y + 1, yank.length)
+          })
+
+          _cursor.y = _cursor_y
+        })
+
+
+        write(_arr, _ => {
+          _.splice(_cursor.y + 1, 0, ...yank)
+        })
+        _cursor.y++
+      } else if (typeof yank === 'string') {
+
+        let line = read(_arr)[_cursor.y]
+        let _cursor_y = _cursor.y
+        let _cursor_x = m_x()
+
+        a_undos.push(() => {
+          write(_arr, _ => {
+            _[_cursor_y] = line
+          })
+          _cursor.x = _cursor_x
+          _cursor.y = _cursor_y
+        })
+
+        write(_arr, _ => {
+          let line = _[_cursor.y]
+          _[_cursor.y] = line.slice(0, m_x()+1) + yank + line.slice(m_x()+1)
+        })
+        _cursor.x = m_x() + 1 + yank.length
+      }
+    },
     undo() {
       let undo = a_undos.pop()
       batch(() => {
@@ -364,11 +412,25 @@ export const make_lines = (msg: string) => {
       return m_x()
     },
     break_line() {
+
       write(_arr, _ => {
         let broke_lines = _[_cursor.y].slice(_cursor.x)
         _[_cursor.y] = _[_cursor.y].slice(0, _cursor.x)
         _.splice(_cursor.y + 1, 0, broke_lines)
       })
+
+      let _cursor_y = _cursor.y,
+        _cursor_x = m_x()
+
+
+      a_insert_undo.push(() => {
+        write(_arr, _ => {
+          let broken_line = _[_cursor_y + 1]
+          _[_cursor_y] = _[_cursor_y].slice(0, _cursor_x) + broken_line
+          _.splice(_cursor_y + 1, 1)
+        })
+      })
+
 
       _cursor.x = 0
       cursor_down()
@@ -376,6 +438,17 @@ export const make_lines = (msg: string) => {
     newline() {
 
       write(_arr, _ => _.splice(_cursor.y + 1, 0, ""))
+
+      let _cursor_y = _cursor.y
+
+      a_insert_undo.push(() => {
+        write(_arr, _ => {
+          _.splice(_cursor_y + 1, 1)
+        })
+        _cursor.y = _cursor_y
+      })
+
+
       _cursor.x = 0
       cursor_down()
     },
