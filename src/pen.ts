@@ -222,6 +222,9 @@ export class Pen {
         break
       case 'Backspace':
         break
+      case 'Escape':
+        this.lines.escape()
+        break
       case 'u':
         this.lines.undo()
         break
@@ -253,6 +256,7 @@ export const make_lines = (msg: string) => {
   let _delete = createSignal(false)
   let _arr = createSignal(msg.split('\n'), { equals: false })
 
+  let _u_cursor = make_position(0, 0)
   let _cursor = make_position(0, 0)
 
 
@@ -283,6 +287,7 @@ export const make_lines = (msg: string) => {
 
   createEffect(on(m_cursor, (c, pre_c) => {
     if (read(_delete)) {
+      owrite(_delete, false)
 
       let undos = []
       if (c[1] === pre_c[1]) {
@@ -291,25 +296,37 @@ export const make_lines = (msg: string) => {
         undos.push(delete_between(min_x, max_x, c[1]))
         _cursor.x = min_x
       } else if (c[1] < pre_c[1]) {
-        for (let i = c[1]; i <= pre_c[1]; i++) {
-          let cline = read(_arr)[i]
-          undos.push(delete_between(0, cline.length, i))
-          _cursor.x = 0
-        }
+        undos.unshift(delete_lines(c[1], pre_c[1]))
+        _cursor.x = 0
       } else {
-        for (let i = pre_c[1]; i <= c[1]; i++) {
-          let cline = read(_arr)[i]
-          undos.push(delete_between(0, cline.length, i))
-        }
+        undos.unshift(delete_lines(pre_c[1], c[1]))
         _cursor.x = 0
       }
 
       a_undos.push(() => {
         undos.forEach(_ => _())
       })
-      owrite(_delete, false)
     }
   }))
+
+  function delete_lines(y: number, y2: number = y) {
+    let removed
+
+    batch(() => {
+      write(_arr, _ => {
+        removed = _.splice(y, y2-y+1)
+      })
+      _cursor.y = Math.min(y, read(_arr).length - 1)
+    })
+
+    return () => {
+      write(_arr, _ => {
+        _.splice(y, 0, ...removed)
+      })
+
+      _cursor.y = y
+    }
+  }
 
   function delete_between(x: number, x2: number, y: number) {
     let removed
@@ -335,7 +352,13 @@ export const make_lines = (msg: string) => {
       })
     },
     set_delete() {
-      owrite(_delete, true)
+      if (read(_delete)) {
+        owrite(_delete, false)
+
+        a_undos.push(delete_lines(_cursor.y))
+      } else {
+        owrite(_delete, true)
+      }
     },
     get cursor_x() {
       return m_x()
@@ -434,6 +457,10 @@ export const make_lines = (msg: string) => {
       return read(_arr)
     },
     delete_under_cursor() {
+      if (read(_delete)) {
+        owrite(_delete, false)
+        return
+      }
       a_undos.push(delete_between(_cursor.x, _cursor.x+1, _cursor.y))
     },
     delete() {
@@ -475,6 +502,9 @@ export const make_lines = (msg: string) => {
       })
       
       a_insert_undo = []
+    },
+    escape() {
+      owrite(_delete, false)
     }
   }
 

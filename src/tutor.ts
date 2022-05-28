@@ -153,11 +153,29 @@ Pressing just the motion while in Normal mode without an operator will move the 
  3. Now type  u  to unde the last command executed.
  4. This time fix all the errors.
  5. Now type  u  a few times to undo the fixes.
- 6. Now type  CTRL-R  (keeping CTRL key pressed while hitting R) a few times to redo the commands.
 
 
 --> Fiix the errors oon thhis line and reeplace them witth undo.
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Lesson 3.1: THE PUT COMMAND
 
+  ** Type  p  to put previously deleted text after the cursor. **
+
+
+ 1. Move the cursor to the first line below marked --> .
+
+ 2. Type dd to delete the line and store it in a Vim register.
+
+ 3. Move the cursor to the c) line, ABOVE where the deleted line should go.
+
+ 4. Type  p  to put the line below the cursor.
+
+ 5. Put the lines all in correct order.
+
+--> d) Can you learn too?
+--> b) Violets are blue,
+--> c) Intelligence is learned,
+--> a) Roses are red,
 
  `
