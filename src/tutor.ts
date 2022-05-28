@@ -76,7 +76,57 @@ Press j enough times to move the cursor so that lesson 1.1 completely fills the 
     There is also some text missing here.
 
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          Lesson 2.1: DELETION COMMANDS
 
+      **  Type  dw  to delete a word. **
+
+ 1. Press <ESC> to make sure you are in Normal mode.
+
+ 2. Move the cursor to the line below marked -->.
+
+ 3. Move the cursor to the beginning of a word that needs to be deleted.
+
+ 4. Type  dw  to make the word dissapear.
+
+-->  There are a some words fun that don't belong paper in this sentence.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          Lesson 2.2: MORE DELETION COMMANDS
+
+      **  Type  d$  to delete to the end of the line. **
+
+  1. Press <ESC> to make sure you are in Normal mode.
+
+  2. Move the cursor to the line below marked -->.
+
+  3. Move the cursor at the end of the correct line (After the first . ).
+
+  4. Type  d$  to delete to the end of the line.
+
+--> Somebody typed the end of this line twice. end of this line twice.
+
+  5. Next Lesson 2.3, explains this in detail.
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          Lesson 2.3: ON OPERATORS AND MOTIONS
+
+Many commands that change text are made from an operator and a motion.
+The format for a delete command with the  d  delete operator is like:
+
+    d  motion
+
+A short list of motions:
+
+  w - until the start of next word, EXCLUDING its first character.
+  e - to the end of the current word, INCLUDING the last character.
+  $ - to the end of the line, INCLUDING the last character.
+
+
+Thus typing  de  will delete from the cursor to the end of the word.
+
+Pressing just the motion while in Normal mode without an operator will move the cursor as specified.
 
 
 

@@ -3,7 +3,70 @@ import { read, write, owrite } from './play'
 import { make_position } from './make_util'
 import { tutor } from './tutor'
 
-const key_motion = ['h', 'j', 'k', 'l']
+const key_motion = ['h', 'j', 'k', 'l', 'b', 'w', 'e', '$', '0']
+
+function out_of_ctx(p: string, n: string) {
+  let w = !!p.match(/[a-zA-Z0-9]/),
+    wn = !!n.match(/[a-zA-Z0-9]/)
+
+  return (w !== wn)
+}
+
+// TODO cache
+function wordize(line: string) {
+  let res = []
+
+  let ctx = ''
+  for (let i = 0; i < line.length - 1; i++) {
+    ctx += line[i]
+    if (out_of_ctx(line[i], line[i+1])) {
+      res.push(ctx)
+      ctx = ''
+    }
+  }
+  ctx += line[line.length - 1]
+  if (ctx !== '') {
+    res.push(ctx)
+  }
+  return res
+}
+
+function words_n(words: Array<string>, n: number) {
+  let res = 0
+  for (let i = 0; i < words.length; i++) {
+    res += words[i].length
+    if (res - 1 >= n) {
+      return i
+    }
+  }
+}
+
+function words_count(words: Array<string>, n: number) {
+  let res = 0
+  for (let i = 0; i <= n; i++) {
+    res += words[i].length
+  }
+  return res
+}
+
+function beginning_of_word(line: string, n: number) {
+  let wz = wordize(line)
+  let i = words_n(wz, n)
+  return words_count(wz, i-1)
+}
+
+function end_of_word(line: string, n: number) {
+  let wz = wordize(line)
+  let i = words_n(wz, n)
+  return words_count(wz, i) - 1
+}
+
+function start_of_next_word(line: string, n: number) {
+  let wz = wordize(line)
+  let i = words_n(wz, n)
+  return words_count(wz, i)
+}
+
 
 export class Pen {
 
@@ -45,6 +108,9 @@ export class Pen {
 
     this.empty_lines = createMemo(() => {
       let nb = this.lines.lines.length
+      if (nb >= 80) {
+        return []
+      }
       return [...Array(80 - nb).keys()]
     })
 
@@ -214,6 +280,7 @@ export const make_lines = (msg: string) => {
     motion(code: string) {
       let motion = key_motion.indexOf(code)
 
+      let line = read(_arr)[_cursor.y]
       let x = m_x()
       switch (motion) {
         case 0:
@@ -235,6 +302,40 @@ export const make_lines = (msg: string) => {
           if (x < read(_arr)[_cursor.y].length - 1) {
           _cursor.x = x + 1;
         }
+          break
+        case 4:
+
+          if (x === 0) {
+            if (_cursor.y > 0) {
+              let pre_line = read(_arr)[_cursor.y - 1]
+              _cursor.x = beginning_of_word(pre_line, pre_line.length-1)
+              _cursor.y--;
+            }
+          } else {
+          _cursor.x = beginning_of_word(line, x - 1)
+          }
+          break
+        case 5:
+          if (x === line.length) {
+            if (_cursor.y < read(_arr).length) {
+              let post_line = read(_arr)[_cursor.y + 1]
+              _cursor.x = start_of_next_word(post_line, 0)
+              _cursor.y++;
+            }
+          } else {
+          _cursor.x = start_of_next_word(line, x)
+          }
+          break
+        case 6:
+          if (x >= line.length - 1) {
+            if (_cursor.y < read(_arr).length) {
+              let post_line = read(_arr)[_cursor.y + 1]
+              _cursor.x = end_of_word(post_line, 0)
+              _cursor.y++;
+            }
+          } else {
+          _cursor.x = end_of_word(line, x + 1)
+          }
           break
       }
     },
