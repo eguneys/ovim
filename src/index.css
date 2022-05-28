@@ -10,7 +10,7 @@ vi-editor {
 
 
 vi-editor span {
-  white-space: pre;
+  white-space: pre-wrap;
   display: block;
   color: white;
 }
@@ -23,7 +23,16 @@ vi-editor .cursor {
 
 vi-editor .content {
   flex: 1;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+vi-editor .content {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+vi-editor .content::-webkit-scrollbar { 
+  display: none;  /* Safari and Chrome */
 }
 
 vi-editor .status {
@@ -48,7 +57,11 @@ vi-editor .status .mode.normal {
 }
 
 @keyframes blink {
+  0%, 100% {
+    color: rgba(0, 0, 0, 255);
+  }
   50% {
+    color: rgba(255, 255, 255, 255);
     background: rgba(0, 0, 0, 0);
   }
 }

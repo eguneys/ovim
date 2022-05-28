@@ -1,6 +1,7 @@
-import { createSignal, createMemo } from 'solid-js'
+import { createEffect, createSignal, createMemo } from 'solid-js'
 import { read, write, owrite } from './play'
 import { make_position } from './make_util'
+import { tutor } from './tutor'
 
 const key_motion = ['h', 'j', 'k', 'l']
 
@@ -14,21 +15,85 @@ export class Pen {
     return owrite(this._mode, m)
   }
 
+  _$content_ref: Signal<HTMLElement>
+  _$cursor_ref: Signal<HTMLElement>
+
+
+  set $content_ref(ref: HTMLElement) {
+    owrite(this._$content_ref, ref)
+  }
+
+  set $cursor_ref(ref: HTMLElement) {
+    owrite(this._$cursor_ref, ref)
+  }
+
+  onScroll() {
+    owrite(this._$clear_bounds)
+  }
+
   constructor() {
+
+    this._$clear_bounds = createSignal(undefined, { equals: false })
+
+    this._$content_ref = createSignal(undefined, { equals: false })
+    this._$cursor_ref = createSignal(undefined, { equals: false })
 
     this._mode = createSignal(1)
 
 
-    this.lines = make_lines()
+    this.lines = make_lines(tutor.trim())
 
     this.empty_lines = createMemo(() => {
       let nb = this.lines.lines.length
       return [...Array(80 - nb).keys()]
     })
+
+    this.m_content_rect = createMemo(() => {
+      read(this._$clear_bounds)
+      return read(this._$content_ref)?.getBoundingClientRect()
+    })
+
+    this.m_cursor_rect = createMemo(() => {
+      read(this._$clear_bounds)
+      return read(this._$cursor_ref)?.getBoundingClientRect()
+    })
+
+
+    this.m_top_off = () => {
+      let content_rect = this.m_content_rect(),
+        cursor_rect = this.m_cursor_rect()
+
+      if (content_rect && cursor_rect) {
+        return content_rect.top - cursor_rect.top
+      }
+    }
+
+
+    this.m_bottom_off = () => {
+      let content_rect = this.m_content_rect(),
+        cursor_rect = this.m_cursor_rect()
+
+      if (content_rect && cursor_rect) {
+        return content_rect.bottom - cursor_rect.bottom
+      }
+    }
+
+    createEffect(() => {
+      let res = this.m_bottom_off()
+      if (res < 0) {
+        read(this._$content_ref).scrollBy(0, -res)
+      }
+    })
+
+    createEffect(() => {
+      let res = this.m_top_off()
+      if (res > 0) {
+        read(this._$content_ref).scrollBy(0, -res)
+      }
+    })
   }
 
   keyDown(code: string, e: EventHandler) {
-    console.log(this.lines.cursor.vs)
     if (this.mode === 1) {
       this.normal_down(code, e)
     } else if (this.mode === 2) {
@@ -56,6 +121,7 @@ export class Pen {
         case 'Space':
           break
         case 'Backspace':
+          this.lines.delete(code)
           break
         case 'Escape':
           this.mode = 1
@@ -93,33 +159,32 @@ export class Pen {
 }
 
 
-export const make_lines = () => {
+export const make_lines = (msg: string) => {
 
-  let _arr = createSignal(["Online Vim Inspired Editor"], { equals: false })
+  let _arr = createSignal(msg.split('\n'), { equals: false })
 
   let _cursor = make_position(0, 0)
-  let _pcursor = make_position(0, 0)
 
   function cursor_up() {
-    align_x_to_line(_cursor.y - 1)
     _cursor.y--;
   }
 
   function cursor_down() {
-    align_x_to_line(_cursor.y + 1)
     _cursor.y++
   }
 
-  function align_x_to_line(y: number) {
-
-    let line = read(_arr)[y]
+  let m_x = createMemo(() => {
+    let line = read(_arr)[_cursor.y]
 
     let l = line.length
 
-    _cursor.x = Math.min(l, _pcursor.x)
-  }
+    return Math.min(l, _cursor.x)
+  })
 
   return {
+    get cursor_x() {
+      return m_x()
+    },
     break_line() {
       write(_arr, _ => {
         let broke_lines = _[_cursor.y].slice(_cursor.x)
@@ -127,22 +192,23 @@ export const make_lines = () => {
         _.splice(_cursor.y + 1, 0, broke_lines)
       })
 
-      _pcursor.x = 0
+      _cursor.x = 0
       cursor_down()
     },
     newline() {
 
       write(_arr, _ => _.splice(_cursor.y + 1, 0, ""))
-      _pcursor.x = 0
+      _cursor.x = 0
       cursor_down()
     },
     motion(code: string) {
       let motion = key_motion.indexOf(code)
 
+      let x = m_x()
       switch (motion) {
         case 0:
-          if (_cursor.x > 0) {
-           _pcursor.x = _cursor.x - 1;
+          if (x > 0) {
+           _cursor.x = x - 1;
           }
           break
         case 1:
@@ -156,8 +222,8 @@ export const make_lines = () => {
           }
           break
         case 3:
-          if (_pcursor.x < read(_arr)[_cursor.y].length - 1) {
-          _pcursor.x++;
+          if (x < read(_arr)[_cursor.y].length - 1) {
+          _cursor.x = x + 1;
         }
           break
       }
@@ -167,6 +233,12 @@ export const make_lines = () => {
     },
     get lines() {
       return read(_arr)
+    },
+    delete() {
+
+      write(_arr, _ => {
+        let line = _[_cursor.y]
+      })
     },
     insert(code: string) {
 
