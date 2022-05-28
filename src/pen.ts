@@ -152,6 +152,9 @@ export class Pen {
       case 'i':
         this.mode = 2
         break
+      case 'x':
+        this.lines.delete_under_cursor()
+        break
       default:
         this.lines.motion(code)
     }
@@ -234,10 +237,10 @@ export const make_lines = (msg: string) => {
     get lines() {
       return read(_arr)
     },
-    delete() {
-
+    delete_under_cursor() {
       write(_arr, _ => {
         let line = _[_cursor.y]
+        _[_cursor.y] = line.slice(0, _cursor.x) + line.slice(_cursor.x + 1)
       })
     },
     insert(code: string) {
