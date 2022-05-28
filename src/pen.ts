@@ -102,7 +102,8 @@ export class Pen {
   }
 
   insert_down(code: string, e: EventHandler) {
-    if (e.ctrlKey) {
+    if (e.altKey) {
+    } else if (e.ctrlKey) {
 
       switch (code) {
         case 'j':
@@ -155,6 +156,9 @@ export class Pen {
       case 'x':
         this.lines.delete_under_cursor()
         break
+      case 'A':
+        this.lines.end_of_line()
+        this.mode = 2
       default:
         this.lines.motion(code)
     }
@@ -204,6 +208,9 @@ export const make_lines = (msg: string) => {
       _cursor.x = 0
       cursor_down()
     },
+    end_of_line() {
+      _cursor.x = read(_arr)[_cursor.y].length
+    },
     motion(code: string) {
       let motion = key_motion.indexOf(code)
 
@@ -242,6 +249,16 @@ export const make_lines = (msg: string) => {
         let line = _[_cursor.y]
         _[_cursor.y] = line.slice(0, _cursor.x) + line.slice(_cursor.x + 1)
       })
+    },
+    delete() {
+      if (_cursor.x === 0) {
+        return
+      }
+      write(_arr, _ => {
+        let line = _[_cursor.y]
+        _[_cursor.y] = line.slice(0, _cursor.x - 1) + line.slice(_cursor.x)
+      })
+      _cursor.x--;
     },
     insert(code: string) {
 
