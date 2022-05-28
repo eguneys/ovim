@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createMemo } from 'solid-js'
+import { on, createEffect, createSignal, createMemo } from 'solid-js'
 import { read, write, owrite } from './play'
 import { make_position } from './make_util'
 import { tutor } from './tutor'
@@ -212,6 +212,9 @@ export class Pen {
         break
       case 'Backspace':
         break
+      case 'd':
+        this.lines.set_delete()
+        break
       case 'o':
         this.lines.newline()
         this.mode = 2
@@ -234,6 +237,7 @@ export class Pen {
 
 export const make_lines = (msg: string) => {
 
+  let _delete = createSignal(false)
   let _arr = createSignal(msg.split('\n'), { equals: false })
 
   let _cursor = make_position(0, 0)
@@ -254,7 +258,45 @@ export const make_lines = (msg: string) => {
     return Math.min(l, _cursor.x)
   })
 
+  let m_cursor = createMemo(() => {
+    return [m_x(), _cursor.y]
+  })
+
+  createEffect(on(m_cursor, (c, pre_c) => {
+    if (read(_delete)) {
+
+      if (c[1] === pre_c[1]) {
+        let min_x = Math.min(c[0], pre_c[0]),
+          max_x = Math.max(c[0], pre_c[0])
+        delete_between(min_x, max_x, c[1])
+      } else if (c[1] < pre_c[1]) {
+        for (let i = c[1]; i <= pre_c[1]; i++) {
+          let cline = read(_arr)[i]
+          delete_between(0, cline.length, i)
+        }
+      } else {
+        for (let i = pre_c[1]; i <= c[1]; i++) {
+          let cline = read(_arr)[i]
+          delete_between(0, cline.length, i)
+        }
+      }
+
+      owrite(_delete, false)
+    }
+  }))
+
+  function delete_between(x: number, x2: number, y: number) {
+    write(_arr, _ => {
+      let line = _[y]
+      _[y] = line.slice(0, x) + line.slice(x2)
+    })
+    _cursor.x = x
+  }
+
   return {
+    set_delete() {
+      owrite(_delete, true)
+    },
     get cursor_x() {
       return m_x()
     },
@@ -337,6 +379,12 @@ export const make_lines = (msg: string) => {
           _cursor.x = end_of_word(line, x + 1)
           }
           break
+          case 7:
+            _cursor.x = Math.max(0, line.length)
+            break
+            case 8:
+              _cursor.x = 0
+            break
       }
     },
     get cursor() {
