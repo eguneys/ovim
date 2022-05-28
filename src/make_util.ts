@@ -1,7 +1,42 @@
-import { createMemo, createSignal, batch } from 'solid-js'
+import { mapArray, createMemo, createSignal, batch } from 'solid-js'
 import { read, write, owrite } from './play'
 
 import { Vec2 } from 'soli2d'
+
+export function make_array<A, B>(arr: Array<A>, map: (_: A) => B) {
+  let _arr = createSignal(arr, { equals: false })
+
+  let _ = createMemo(mapArray(_arr[0], map))
+
+  return {
+    get values() { return _() },
+    get head() { return _()[0] },
+    push(a: A) {
+      write(_arr, _ => _.push(a))
+    },
+    pop() {
+      let res 
+      write(_arr, _ => res = _.pop())
+      return res
+    },
+    enqueue(a: A) {
+      write(_arr, _ => _.unshift(a))
+    },
+    dequeue() {
+      let res
+      write(_arr, _ => res = _.shift())
+      return res
+    },
+    remove(a: A) {
+      write(_arr, _ => {
+        _.splice(_.indexOf(a), 1)
+      })
+    },
+    clear() {
+      owrite(_arr, [])
+    }
+  }
+}
 
 
 

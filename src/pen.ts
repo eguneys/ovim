@@ -1,6 +1,6 @@
-import { on, createEffect, createSignal, createMemo } from 'solid-js'
+import { batch, on, createEffect, createSignal, createMemo } from 'solid-js'
 import { read, write, owrite } from './play'
-import { make_position } from './make_util'
+import { make_array, make_position } from './make_util'
 import { tutor } from './tutor'
 
 const key_motion = ['h', 'j', 'k', 'l', 'b', 'w', 'e', '$', '0']
@@ -157,6 +157,16 @@ export class Pen {
         read(this._$content_ref).scrollBy(0, -res)
       }
     })
+
+
+    createEffect(on(this._mode[0], (m, pm) => {
+      if (m === 1 && pm === 2) {
+        console.log(m)
+        this.lines.escape_insert()
+      } else if (m === 2 && pm === 1) {
+        this.lines.begin_insert()
+      }
+    }))
   }
 
   keyDown(code: string, e: EventHandler) {
@@ -212,6 +222,9 @@ export class Pen {
         break
       case 'Backspace':
         break
+      case 'u':
+        this.lines.undo()
+        break
       case 'd':
         this.lines.set_delete()
         break
@@ -242,6 +255,12 @@ export const make_lines = (msg: string) => {
 
   let _cursor = make_position(0, 0)
 
+
+  let a_undos = make_array([], _ => _)
+
+
+  let a_insert_undo = []
+
   function cursor_up() {
     _cursor.y--;
   }
@@ -265,35 +284,56 @@ export const make_lines = (msg: string) => {
   createEffect(on(m_cursor, (c, pre_c) => {
     if (read(_delete)) {
 
+      let undos = []
       if (c[1] === pre_c[1]) {
         let min_x = Math.min(c[0], pre_c[0]),
           max_x = Math.max(c[0], pre_c[0])
-        delete_between(min_x, max_x, c[1])
+        undos.push(delete_between(min_x, max_x, c[1]))
+        _cursor.x = min_x
       } else if (c[1] < pre_c[1]) {
         for (let i = c[1]; i <= pre_c[1]; i++) {
           let cline = read(_arr)[i]
-          delete_between(0, cline.length, i)
+          undos.push(delete_between(0, cline.length, i))
+          _cursor.x = 0
         }
       } else {
         for (let i = pre_c[1]; i <= c[1]; i++) {
           let cline = read(_arr)[i]
-          delete_between(0, cline.length, i)
+          undos.push(delete_between(0, cline.length, i))
         }
+        _cursor.x = 0
       }
 
+      a_undos.push(() => {
+        undos.forEach(_ => _())
+      })
       owrite(_delete, false)
     }
   }))
 
   function delete_between(x: number, x2: number, y: number) {
+    let removed
     write(_arr, _ => {
       let line = _[y]
+      removed = line.slice(x, x2)
       _[y] = line.slice(0, x) + line.slice(x2)
     })
-    _cursor.x = x
+
+    return () => {
+      write(_arr, _ => {
+        let line = _[y]
+        _[y] = line.slice(0, x) + removed + line.slice(x)
+      })
+    }
   }
 
   return {
+    undo() {
+      let undo = a_undos.pop()
+      batch(() => {
+        undo?.()
+      })
+    },
     set_delete() {
       owrite(_delete, true)
     },
@@ -394,29 +434,47 @@ export const make_lines = (msg: string) => {
       return read(_arr)
     },
     delete_under_cursor() {
-      write(_arr, _ => {
-        let line = _[_cursor.y]
-        _[_cursor.y] = line.slice(0, _cursor.x) + line.slice(_cursor.x + 1)
-      })
+      a_undos.push(delete_between(_cursor.x, _cursor.x+1, _cursor.y))
     },
     delete() {
-      if (_cursor.x === 0) {
+      if (m_x() === 0) {
         return
       }
+
       write(_arr, _ => {
         let line = _[_cursor.y]
-        _[_cursor.y] = line.slice(0, _cursor.x - 1) + line.slice(_cursor.x)
+        _[_cursor.y] = line.slice(0, m_x() - 1) + line.slice(m_x())
       })
-      _cursor.x--;
+      _cursor.x = m_x() - 1
     },
     insert(code: string) {
-
       write(_arr, _ => {
         let line = _[_cursor.y]
-        _[_cursor.y] = line.slice(0, _cursor.x) + code + line.slice(_cursor.x)
+        _[_cursor.y] = line.slice(0, m_x()) + code + line.slice(m_x())
       })
+      _cursor.x = m_x() + 1
+    },
+    begin_insert() {
+      let line = read(_arr)[_cursor.y]
+      let _cursor_y = _cursor.y
+      let _cursor_x = m_x()
 
-      _cursor.x++
+      a_insert_undo.push(() => {
+        write(_arr, _ => {
+          _[_cursor_y] = line
+        })
+        _cursor.x = _cursor_x
+        _cursor.y = _cursor_y
+      })
+    },
+    escape_insert() {
+
+      let _a = a_insert_undo.slice(0).reverse()
+      a_undos.push(() => {
+        _a.forEach(_ => _())
+      })
+      
+      a_insert_undo = []
     }
   }
 

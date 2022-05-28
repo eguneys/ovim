@@ -129,5 +129,35 @@ Thus typing  de  will delete from the cursor to the end of the word.
 Pressing just the motion while in Normal mode without an operator will move the cursor as specified.
 
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+       Lesson 2.6: OPERATING ON LINES
+
+  ** Type  dd  to delete a whole line. **
+
+ 1. Move the cursor to the second line in the phrase below.
+ 2. Type  dd  to delete the line.
+
+
+--> 1) Roses are red,
+--> 2) Mud is fun,
+--> 3) Violets are blue.
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     Lesson 2.7: THE UNDO COMMAND
+
+  ** Press  u  to undo the last commands.  **
+
+ 1. Move the cursor to the line below marked --> and place it on the first error.
+ 2. Type x to delete the first unwanted character.
+ 3. Now type  u  to unde the last command executed.
+ 4. This time fix all the errors.
+ 5. Now type  u  a few times to undo the fixes.
+ 6. Now type  CTRL-R  (keeping CTRL key pressed while hitting R) a few times to redo the commands.
+
+
+--> Fiix the errors oon thhis line and reeplace them witth undo.
+
+
 
  `
