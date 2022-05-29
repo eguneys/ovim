@@ -210,12 +210,15 @@ export class Pen {
   }
 
   normal_down(code: string) {
+    if (this.lines.intercept_mode(code)) {
+      return
+    }
     switch (code) {
       case 'Enter':
         break
       case 'Shift':
         break
-      case 'Ctrl':
+      case 'Control':
         break
       case 'Space':
         break
@@ -229,6 +232,9 @@ export class Pen {
         break
       case 'u':
         this.lines.undo()
+        break
+      case 'r':
+        this.lines.set_replace()
         break
       case 'd':
         this.lines.set_delete()
@@ -255,6 +261,7 @@ export class Pen {
 
 export const make_lines = (msg: string) => {
 
+  let _replace = createSignal(false)
   let _delete = createSignal(false)
   let _arr = createSignal(msg.split('\n'), { equals: false })
 
@@ -350,6 +357,25 @@ export const make_lines = (msg: string) => {
     }
   }
 
+
+  function replace_char(r: string) {
+    let x = m_x()
+    let old_r
+    write(_arr, _ => {
+      old_r = _[_cursor.y][x]
+      _[_cursor.y] = _[_cursor.y].slice(0, x) + r + _[_cursor.y].slice(x + 1)
+    })
+    
+    let _cursor_y = _cursor.y
+    return () => {
+
+      write(_arr, _ => {
+        _[_cursor_y] = _[_cursor_y].slice(0, x) + old_r + _[_cursor_y].slice(x + 1)
+      })
+      _cursor.y = _cursor_y
+    }
+  }
+
   return {
     put() {
       let yank = read(_yank)
@@ -399,7 +425,32 @@ export const make_lines = (msg: string) => {
         undo?.()
       })
     },
+    intercept_mode(code: string) {
+      if (read(_replace)) {
+        if (code.length > 1) {
+          return false
+        }
+        owrite(_replace, false)
+        a_undos.push(replace_char(code))
+        return true
+      }
+    },
+    set_replace() {
+      if (read(_delete)) {
+        owrite(_delete, false)
+      } else if (read(_replace)) {
+        owrite(_replace, false)
+        a_undos.push(replace_char('r'))
+      } else {
+        owrite(_replace, true)
+      }
+    },
     set_delete() {
+      if (read(_replace)) {
+        owrite(_replace, false)
+        a_undos.push(replace_char('d'))
+        return
+      }
       if (read(_delete)) {
         owrite(_delete, false)
 

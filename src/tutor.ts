@@ -178,4 +178,23 @@ Pressing just the motion while in Normal mode without an operator will move the 
 --> c) Intelligence is learned,
 --> a) Roses are red,
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Lesson 3.2: THE REPLACE COMMAND
+
+   ** Type  rx  to replace the character at the cursor with  x  . **
+
+  1. Move the cursor to the first line below marked -->.
+
+  2. Move the cursor on top of the first error.
+
+  3. Type  r  and then the character which should be there.
+
+  4. Fix all the errors.
+
+--> Whan this lime was tuoed in, someone presswd some wrojg keys!
+--> When this line was typed in, someone pressed some wrong keys!
+
+
+
+
  `
