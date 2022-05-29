@@ -31,13 +31,19 @@ body, input {
     <script>
 
       document.addEventListener("DOMContentLoaded", () => {
-              let api = VPro(document.getElementById('app'), { 
+              let api = OVim(document.getElementById('app'), { 
                       on_command(command, content) {
                               console.log(command, content)
                             }})
 
               setTimeout(() => {
                       console.log(api.content)
+                      api.line_klass(0, 'error')
+                      api.line_klass(3, 'error')
+                      api.line_klass(3, 'world')
+                      setTimeout(() => {
+                              api.line_klass(3)
+                            }, 1000)
                     }, 1000)
       })
     </script>

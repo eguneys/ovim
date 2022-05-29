@@ -23,11 +23,10 @@ export default args => {
     input: 'src/main.ts',
     output: {
       format: 'iife',
-      name: 'VPro',
+      name: 'OVim',
       dir: 'dist',
       ...(prod ? {
-        entryFileNames: '[name].min.js',
-        plugins: [terser({mangle: true })]
+        format: 'es'
       } : { sourcemap: true })
     },
     watch: {

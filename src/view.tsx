@@ -40,12 +40,8 @@ const App = pen => () => {
    <vi-editor autofocus={true} tabindex="0" onKeyDown={_ => pen.keyDown(_.key, _)}>
    <div ref={_ => setTimeout(() => pen.$content_ref = _)} class='content'>
    <For each={pen.lines.lines}>{ (line, i) => 
-   <Show when={i() === pen.lines.cursor.y}
-   fallback={<span>{format_char(line)}</span>}
-   >
-   <span>{line.slice(0, pen.lines.cursor_x)}<span ref={_ => setTimeout(() => pen.$cursor_ref = _)} class='cursor'>{format_char(line[pen.lines.cursor_x])}</span>{line.slice(pen.lines.cursor_x+1)}</span>
-   </Show>
-   }</For>
+     <Line pen={pen} line={line} i={i()}/>
+     }</For>
    <For each={pen.empty_lines()}>{line =>
      <span>~</span>
    }</For>
@@ -60,6 +56,21 @@ const App = pen => () => {
    </div>
    </vi-editor>
       </>)
+}
+
+const Line = props => {
+
+
+  let { pen } = props
+
+  let klass = () => (pen.line_klasses(props.i) || []).join(' ')
+
+  return (<Show when={props.i === pen.lines.cursor.y}
+      fallback={<span class={klass()}>{format_char(props.line)}</span>}
+      >
+      <span class={klass()}>{props.line.slice(0, pen.lines.cursor_x)}<span ref={_ => setTimeout(() => pen.$cursor_ref = _)} class='cursor'>{format_char(props.line[pen.lines.cursor_x])}</span>{props.line.slice(pen.lines.cursor_x+1)}</span>
+      </Show>)
+
 }
 
 export default App

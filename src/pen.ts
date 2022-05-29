@@ -1,7 +1,6 @@
 import { batch, on, createEffect, createSignal, createMemo } from 'solid-js'
 import { read, write, owrite } from './play'
 import { make_array, make_position } from './make_util'
-import { tutor } from './tutor'
 
 const key_motion = ['h', 'j', 'k', 'l', 'b', 'w', 'e', '$', '0']
 
@@ -95,11 +94,15 @@ export class Pen {
     return this.lines.content
   }
 
+  line_klasses(i: number) {
+    return this.lines.line_klasses(i)
+  }
+
   onScroll() {
     owrite(this._$clear_bounds)
   }
 
-  constructor(readonly on_command: (command: string, content: string) => void) {
+  constructor(content: string, readonly on_command: (command: string, content: string) => void) {
 
     this._$clear_bounds = createSignal(undefined, { equals: false })
 
@@ -109,7 +112,7 @@ export class Pen {
     this._mode = createSignal(1)
 
 
-    this.lines = make_lines(this, tutor.trim())
+    this.lines = make_lines(this, content)
 
     this.empty_lines = createMemo(() => {
       let nb = this.lines.lines.length
@@ -457,7 +460,19 @@ export const make_lines = (pen: Pen, msg: string) => {
     }
   }
 
+
+  let a_line_klasses = createSignal([], { equals: false })
+
   return {
+    clear_klass(i: number) {
+      write(a_line_klasses, _ => _[i] = [])
+    },
+    add_klass(i: number, klass: string) {
+      write(a_line_klasses, _ => (_[i] = _[i] || []) && _[i].push(klass))
+    },
+    line_klasses(i: number) {
+      return read(a_line_klasses)[i]
+    },
     get command() {
       if (read(_command_flag)) {
         return read(_command)

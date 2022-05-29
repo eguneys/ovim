@@ -1,7 +1,7 @@
 {
-  "name": "vpro",
+  "name": "ovim",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/main.js",
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf dist",

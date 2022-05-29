@@ -3,15 +3,23 @@ import { render } from 'solid-js/web'
 
 import { Pen } from './pen'
 import App from './view'
+import { tutor } from './tutor'
 
 export default function VPro(element: HTMLElement, options = {}) {
 
-  let pen = new Pen(options.on_command)
+  let pen = new Pen(options.content || tutor.trim(), options.on_command)
   render(App(pen), element)
 
   return {
     get content() {
       return pen.content
+    },
+    line_klass(i: number, v: string) {
+      if (!v) {
+        pen.lines.clear_klass(i)
+      } else {
+        pen.lines.add_klass(i, v)
+      }
     }
   }
 }

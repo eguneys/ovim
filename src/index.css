@@ -65,3 +65,7 @@ vi-editor .status .mode.normal {
     background: rgba(0, 0, 0, 0);
   }
 }
+
+vi-editor span.error {
+  text-decoration: underline wavy red;
+}
