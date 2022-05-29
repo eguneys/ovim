@@ -5,21 +5,22 @@ import { tutor } from './tutor'
 
 const key_motion = ['h', 'j', 'k', 'l', 'b', 'w', 'e', '$', '0']
 
-function out_of_ctx(p: string, n: string) {
+function out_of_ctx(p: string, n: string, no_spaces: boolean) {
+  let RE = no_spaces ? /[a-zA-Z0-9]/ : /[a-zA-Z0-9 ]/
   let w = !!p.match(/[a-zA-Z0-9]/),
-    wn = !!n.match(/[a-zA-Z0-9 ]/)
+    wn = !!n.match(RE)
 
   return (w !== wn)
 }
 
 // TODO cache
-function wordize(line: string) {
+function wordize(line: string, no_spaces: boolean = false) {
   let res = []
 
   let ctx = ''
   for (let i = 0; i < line.length - 1; i++) {
     ctx += line[i]
-    if (out_of_ctx(line[i], line[i+1])) {
+    if (out_of_ctx(line[i], line[i+1], no_spaces)) {
       res.push(ctx)
       ctx = ''
     }
@@ -56,7 +57,7 @@ function beginning_of_word(line: string, n: number) {
 }
 
 function end_of_word(line: string, n: number) {
-  let wz = wordize(line)
+  let wz = wordize(line, true)
   let i = words_n(wz, n)
   return words_count(wz, i) - 1
 }
@@ -255,9 +256,14 @@ export class Pen {
       case 'x':
         this.lines.delete_under_cursor()
         break
+      case 'a':
+        this.lines.cursor_append()
+        this.mode = 2
+        break
       case 'A':
         this.lines.end_of_line()
         this.mode = 2
+        break
       default:
         this.lines.motion(code)
     }
@@ -520,6 +526,9 @@ export const make_lines = (msg: string) => {
     end_of_line() {
       _cursor.x = read(_arr)[_cursor.y].length
     },
+    cursor_append() {
+      _cursor.x++
+    },
     motion(code: string) {
       let motion = key_motion.indexOf(code)
 
@@ -581,7 +590,7 @@ export const make_lines = (msg: string) => {
           }
           break
           case 7:
-            _cursor.x = Math.max(0, line.length)
+            _cursor.x = Math.max(0, line.length-1)
             break
             case 8:
               _cursor.x = 0

@@ -204,4 +204,39 @@ Pressing just the motion while in Normal mode without an operator will move the 
    1. Press  G  to move to the bottom of the file.
       Type  gg  to move to the start of the file.
 
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Lesson 6.1: OPEN COMMAND
+
+   ** Type  o  to open a line below the cursor and place you in Insert mode. **
+
+  1. Move the cursor to the first line below marked -->.
+
+  2. Type lowercase letter  o  to open up a line BELOW the cursor and place you in Insert mode.
+
+  3. Now type some text and press <ESC> to exit Insert mode.
+
+--> After typing  o  the cursor is placed on the open line in Insert mode.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Lesson 6.2: APPEND COMMAND
+   
+   ** Type  a  to insert text AFTER the cursor. **
+
+  1. Move the cursor to the start of the first line below marked -->.
+
+  2. Press  e  until the cursor is on the end of  li .
+
+  3. Type an  a  (lowercase)  to append text AFTER the cursor.
+
+  4. Complete the word like the line below it. Press <ESC> to exit Insert mode.
+
+  5. Use  e  to move to the next incomplete word and fix errors.
+
+--> This li will allow you to pract appendi text to a line.
+--> This line will allow you to practice appending text to a line.
+
+NOTE: a, i and A all go to the same Insert mode, the only difference is where the characters are inserted.
+
+
  `
