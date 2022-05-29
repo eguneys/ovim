@@ -91,11 +91,15 @@ export class Pen {
     owrite(this._$cursor_ref, ref)
   }
 
+  get content() {
+    return this.lines.content
+  }
+
   onScroll() {
     owrite(this._$clear_bounds)
   }
 
-  constructor() {
+  constructor(readonly on_command: (command: string, content: string) => void) {
 
     this._$clear_bounds = createSignal(undefined, { equals: false })
 
@@ -178,6 +182,10 @@ export class Pen {
     }))
   }
 
+  commit_command(command: string, content: string) {
+    this.on_command(command, content)
+  }
+
   keyDown(code: string, e: EventHandler) {
     if (this.mode === 1) {
       this.normal_down(code, e)
@@ -220,6 +228,13 @@ export class Pen {
   }
 
   normal_down(code: string, e: EventHandler) {
+    if (code === 'Escape') {
+      this.lines.escape()
+      return
+    }
+    if (this.lines.intercept_mode(code)) {
+      return
+    }
     if (e.ctrlKey) {
       switch (code) {
         case 'u':
@@ -233,10 +248,10 @@ export class Pen {
       }
       return
     }
-    if (this.lines.intercept_mode(code)) {
-      return
-    }
     switch (code) {
+      case ':':
+        this.lines.set_command_mode()
+        break
       case 'Enter':
         break
       case 'Shift':
@@ -295,6 +310,7 @@ export class Pen {
 
 export const make_lines = (pen: Pen, msg: string) => {
 
+  let _command_flag = createSignal(false)
   let _gg_flag = createSignal(false)
   let _replace = createSignal(false)
   let _delete = createSignal(false)
@@ -308,6 +324,8 @@ export const make_lines = (pen: Pen, msg: string) => {
 
   let _yank = createSignal()
 
+  let _command = createSignal('')
+
   let a_insert_undo = []
 
   function cursor_up() {
@@ -318,9 +336,23 @@ export const make_lines = (pen: Pen, msg: string) => {
     _cursor.y++
   }
 
+  function append_command(code: string) {
+    if (code.length !== 1) {
+      return
+    }
+    owrite(_command, _ => _ + code)
+  }
+
+  function commit_command() {
+    pen.commit_command(read(_command), m_content())
+  }
+
+  let m_content = createMemo(() => {
+    return read(_arr).join('\n')
+  })
+
   let m_x = createMemo(() => {
     let line = read(_arr)[_cursor.y]
-
     let l = line.length
 
     return Math.min(l, _cursor.x)
@@ -354,14 +386,28 @@ export const make_lines = (pen: Pen, msg: string) => {
     }
   }))
 
+
+  createEffect(on(_command_flag[0], (v, p) => {
+    if (!!v && !p) {
+      owrite(_command, ':')
+    }
+    if (!!p && !v) {
+      owrite(_command, '')
+    }
+  }))
+
   function delete_lines(y: number, y2: number = y) {
     let removed
 
     batch(() => {
       write(_arr, _ => {
         removed = _.splice(y, y2-y+1)
+        // don't delete the last line
+        if (_.length === 0) {
+          _.push("")
+        }
       })
-      _cursor.y = Math.min(y, read(_arr).length - 1)
+      _cursor.y = Math.max(0, Math.min(y, read(_arr).length - 1))
 
       owrite(_yank, removed)
     })
@@ -412,6 +458,14 @@ export const make_lines = (pen: Pen, msg: string) => {
   }
 
   return {
+    get command() {
+      if (read(_command_flag)) {
+        return read(_command)
+      }
+    },
+    set_command_mode() {
+      owrite(_command_flag, true)
+    },
     put() {
       let yank = read(_yank)
 
@@ -461,6 +515,14 @@ export const make_lines = (pen: Pen, msg: string) => {
       })
     },
     intercept_mode(code: string) {
+      if (read(_command_flag)) {
+        if (code === 'Enter') {
+          commit_command()
+          this.escape()
+        }
+        append_command(code)
+        return true
+      }
       if (read(_gg_flag)) {
         owrite(_gg_flag, false)
         if (code === 'g') {
@@ -503,6 +565,9 @@ export const make_lines = (pen: Pen, msg: string) => {
     },
     get cursor_x() {
       return m_x()
+    },
+    get content() {
+      return m_content()
     },
     break_line() {
 
@@ -673,6 +738,9 @@ export const make_lines = (pen: Pen, msg: string) => {
       a_insert_undo = []
     },
     escape() {
+      owrite(_command_flag, false)
+      owrite(_gg_flag, false)
+      owrite(_replace, false)
       owrite(_delete, false)
     },
     move_end_of_file() {

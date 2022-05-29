@@ -31,7 +31,14 @@ body, input {
     <script>
 
       document.addEventListener("DOMContentLoaded", () => {
-        VPro(document.getElementById('app'), {})
+              let api = VPro(document.getElementById('app'), { 
+                      on_command(command, content) {
+                              console.log(command, content)
+                            }})
+
+              setTimeout(() => {
+                      console.log(api.content)
+                    }, 1000)
       })
     </script>
   </body>

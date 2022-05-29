@@ -1,5 +1,4 @@
 import { onMount, onCleanup } from 'solid-js'
-import { Pen } from './pen'
 
 let mode_text = ['', 'Normal', 'Insert']
 let mode_klass = ['', 'normal', 'insert']
@@ -24,9 +23,7 @@ function unbindable(
 type Unbind = () => void
 
 
-const App = () => {
-
-  let pen = new Pen()
+const App = pen => () => {
 
   let unbinds = []
 
@@ -54,7 +51,12 @@ const App = () => {
    }</For>
    </div>
    <div class='status'>
+     <Show when={pen.lines.command}
+     fallback= {
      <span class={['mode', mode_klass[pen.mode]].join(' ')}>{mode_text[pen.mode]}</span>
+     }>{ value =>
+      <span>{value}</span>
+     }</Show>
    </div>
    </vi-editor>
       </>)
