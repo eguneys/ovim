@@ -194,7 +194,14 @@ Pressing just the motion while in Normal mode without an operator will move the 
 --> Whan this lime was tuoed in, someone presswd some wrojg keys!
 --> When this line was typed in, someone pressed some wrong keys!
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     Lesson 4.1: CURSOR LOCATION
 
+   ** Type  G  to move to a line in the file. **
 
+  NOTE: Read the entire lesson before executing any of the steps!
+
+   1. Press  G  to move to the bottom of the file.
+      Type  gg  to move to the start of the file.
 
  `

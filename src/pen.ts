@@ -227,6 +227,12 @@ export class Pen {
       case 'Escape':
         this.lines.escape()
         break
+      case 'g':
+        this.lines.set_g()
+        break
+      case 'G':
+        this.lines.move_end_of_file()
+        break
       case 'p':
         this.lines.put()
         break
@@ -261,6 +267,7 @@ export class Pen {
 
 export const make_lines = (msg: string) => {
 
+  let _gg_flag = createSignal(false)
   let _replace = createSignal(false)
   let _delete = createSignal(false)
   let _arr = createSignal(msg.split('\n'), { equals: false })
@@ -426,6 +433,13 @@ export const make_lines = (msg: string) => {
       })
     },
     intercept_mode(code: string) {
+      if (read(_gg_flag)) {
+        owrite(_gg_flag, false)
+        if (code === 'g') {
+          _cursor.y = 0
+        }
+        return true
+      }
       if (read(_replace)) {
         if (code.length > 1) {
           return false
@@ -629,6 +643,12 @@ export const make_lines = (msg: string) => {
     },
     escape() {
       owrite(_delete, false)
+    },
+    move_end_of_file() {
+      _cursor.y = read(_arr).length - 1
+    },
+    set_g() {
+      owrite(_gg_flag, true)
     }
   }
 
