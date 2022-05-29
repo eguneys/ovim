@@ -238,5 +238,13 @@ Pressing just the motion while in Normal mode without an operator will move the 
 
 NOTE: a, i and A all go to the same Insert mode, the only difference is where the characters are inserted.
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Lesson 8.1 FASTER NAVIGATION
 
+   ** Type  CTRL-U  or  CTRL-D  to scroll by half page **
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   This concludes the OVim tutorial. 
  `

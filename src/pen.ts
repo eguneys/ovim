@@ -105,7 +105,7 @@ export class Pen {
     this._mode = createSignal(1)
 
 
-    this.lines = make_lines(tutor.trim())
+    this.lines = make_lines(this, tutor.trim())
 
     this.empty_lines = createMemo(() => {
       let nb = this.lines.lines.length
@@ -125,6 +125,15 @@ export class Pen {
       return read(this._$cursor_ref)?.getBoundingClientRect()
     })
 
+    this.nb_lines = createMemo(() => {
+      let content_rect = this.m_content_rect(),
+        cursor_rect = this.m_cursor_rect()
+
+      if (content_rect && cursor_rect) {
+        return Math.floor(content_rect.height / cursor_rect.height)
+      }
+      return 0
+    })
 
     this.m_top_off = () => {
       let content_rect = this.m_content_rect(),
@@ -210,7 +219,20 @@ export class Pen {
     }
   }
 
-  normal_down(code: string) {
+  normal_down(code: string, e: EventHandler) {
+    if (e.ctrlKey) {
+      switch (code) {
+        case 'u':
+          this.lines.half_page_move(-1)
+          e.preventDefault()
+        break
+        case 'd':
+          this.lines.half_page_move(1)
+          e.preventDefault()
+        break
+      }
+      return
+    }
     if (this.lines.intercept_mode(code)) {
       return
     }
@@ -271,7 +293,7 @@ export class Pen {
 }
 
 
-export const make_lines = (msg: string) => {
+export const make_lines = (pen: Pen, msg: string) => {
 
   let _gg_flag = createSignal(false)
   let _replace = createSignal(false)
@@ -658,6 +680,11 @@ export const make_lines = (msg: string) => {
     },
     set_g() {
       owrite(_gg_flag, true)
+    },
+    half_page_move(dir: number) {
+      let value = _cursor.y + pen.nb_lines() / 2 * dir
+      _cursor.y = Math.min(read(_arr).length - 1, 
+                           Math.max(0, value))
     }
   }
 
