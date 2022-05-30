@@ -49,6 +49,10 @@ function words_count(words: Array<string>, n: number) {
   return res
 }
 
+function beginning_of_word0(line: string) {
+  return line.length - line.trim().length
+}
+
 function beginning_of_word(line: string, n: number) {
   let wz = wordize(line)
   let i = words_n(wz, n)
@@ -255,11 +259,17 @@ export class Pen {
         case 'd':
           this.lines.half_page_move(1)
           e.preventDefault()
+        case 'h':
+          this.lines.cursor_left_or_up()
+          e.preventDefault()
         break
       }
       return
     }
     switch (code) {
+      case '_':
+        this.lines.go_beginning_word0()
+        break
       case ':':
         this.lines.set_command_mode()
         break
@@ -669,6 +679,18 @@ export const make_lines = (pen: Pen, msg: string) => {
     },
     cursor_append() {
       _cursor.x++;
+    },
+    cursor_left_or_up() {
+      let x = m_x()
+      if (x > 0) {
+        _cursor.x = x - 1
+      } else if (_cursor.y > 0) {
+        _cursor.x = read(_arr)[_cursor.y - 1].length
+        _cursor.y--
+      }
+    },
+    go_beginning_word0() {
+      _cursor.x = beginning_of_word0(read(_arr)[_cursor.y])
     },
     motion(code: string) {
       let motion = key_motion.indexOf(code)
