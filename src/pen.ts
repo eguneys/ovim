@@ -676,6 +676,9 @@ export const make_lines = (pen: Pen, msg: string) => {
           if (x === line.length) {
             if (_cursor.y < read(_arr).length) {
               let post_line = read(_arr)[_cursor.y + 1]
+              if (post_line === undefined) {
+                return
+              }
               _cursor.x = start_of_next_word(post_line, 0)
               _cursor.y++;
             }
@@ -687,6 +690,9 @@ export const make_lines = (pen: Pen, msg: string) => {
           if (x >= line.length - 1) {
             if (_cursor.y < read(_arr).length) {
               let post_line = read(_arr)[_cursor.y + 1]
+              if (post_line === undefined) {
+                return
+              }
               _cursor.x = end_of_word(post_line, 0)
               _cursor.y++;
             }
