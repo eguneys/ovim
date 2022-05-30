@@ -311,6 +311,9 @@ export class Pen {
       case 'r':
         this.lines.set_replace()
         break
+      case 'D':
+        this.lines.delete_until_end()
+        break
       case 'd':
         this.lines.set_delete()
         break
@@ -701,6 +704,9 @@ export const make_lines = (pen: Pen, msg: string) => {
     },
     go_beginning_word0() {
       _cursor.x = beginning_of_word0(read(_arr)[_cursor.y])
+    },
+    delete_until_end() {
+      a_undos.push(delete_between(_cursor.x, read(_arr)[_cursor.y].length, _cursor.y))
     },
     motion(code: string) {
       let motion = key_motion.indexOf(code)
