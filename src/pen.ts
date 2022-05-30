@@ -94,6 +94,10 @@ export class Pen {
     return this.lines.content
   }
 
+  set content(content: string) {
+    this.lines.content = content
+  }
+
   line_klasses(i: number) {
     return this.lines.line_klasses(i)
   }
@@ -594,6 +598,13 @@ export const make_lines = (pen: Pen, msg: string) => {
     },
     get content() {
       return m_content()
+    },
+    set content(content: string) {
+      batch(() => {
+        owrite(_arr, content.split('\n'))
+        _cursor.x = 0
+        _cursor.y = 0
+      })
     },
     break_line() {
 
