@@ -54,6 +54,9 @@ const App = pen => () => {
       <span>{value}</span>
      }</Show>
    </div>
+   <div class='prompt'>
+     <span>{pen.prompt}</span>
+   </div>
    </vi-editor>
       </>)
 }

@@ -41,8 +41,10 @@ body, input {
                       api.line_klass(0, 'error')
                       api.line_klass(3, 'error')
                       api.line_klass(3, 'world')
+                      api.prompt = 'hello'
                       setTimeout(() => {
                               api.line_klass(3)
+                              api.prompt = ''
                             }, 1000)
                     }, 1000)
       })

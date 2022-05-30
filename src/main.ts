@@ -11,6 +11,9 @@ export default function VPro(element: HTMLElement, options = {}) {
   render(App(pen), element)
 
   return {
+    set prompt(prompt: string) {
+      pen.prompt = prompt
+    },
     set content(content: string) {
       pen.content = content
     },

@@ -110,7 +110,17 @@ export class Pen {
     owrite(this._$clear_bounds)
   }
 
+  get prompt() {
+    return read(this._prompt)
+  }
+
+  set prompt(prompt: string) {
+    owrite(this._prompt, prompt)
+  }
+
   constructor(content: string, readonly on_command: (command: string, content: string) => void) {
+
+    this._prompt = createSignal()
 
     this._$clear_bounds = createSignal(undefined, { equals: false })
 
