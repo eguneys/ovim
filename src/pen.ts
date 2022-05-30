@@ -202,6 +202,10 @@ export class Pen {
     } else if (e.ctrlKey) {
 
       switch (code) {
+        case 'h':
+          this.lines.delete()
+          e.preventDefault()
+          break
         case 'j':
           this.lines.break_line()
           e.preventDefault()
@@ -285,6 +289,10 @@ export class Pen {
         break
       case 'd':
         this.lines.set_delete()
+        break
+      case 'O':
+        this.lines.newline_up()
+        this.mode = 2
         break
       case 'o':
         this.lines.newline()
@@ -610,6 +618,23 @@ export const make_lines = (pen: Pen, msg: string) => {
 
       _cursor.x = 0
       cursor_down()
+    },
+    newline_up() {
+
+      write(_arr, _ => _.splice(_cursor.y, 0, ""))
+
+      let _cursor_y = _cursor.y
+
+      a_insert_undo.push(() => {
+        write(_arr, _ => {
+          _.splice(_cursor_y - 1, 1)
+        })
+        _cursor.y = _cursor_y
+      })
+
+
+      _cursor.x = 0
+
     },
     newline() {
 
