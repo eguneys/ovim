@@ -12,8 +12,6 @@ import livereload from 'rollup-plugin-livereload'
 
 import { string } from 'rollup-plugin-string'
 
-import { terser }  from 'rollup-plugin-terser'
-
 let extensions = ['.ts', '.tsx']
 
 export default args => {
