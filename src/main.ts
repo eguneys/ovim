@@ -20,6 +20,9 @@ export default function VPro(element: HTMLElement, options = {}) {
       } else {
         pen.lines.add_klass(i, v)
       }
+    },
+    clear_lines() {
+      pen.lines.clear_lines()
     }
   }
 }

@@ -464,6 +464,9 @@ export const make_lines = (pen: Pen, msg: string) => {
   let a_line_klasses = createSignal([], { equals: false })
 
   return {
+    clear_lines() {
+      owrite(a_line_klasses, [])
+    },
     clear_klass(i: number) {
       write(a_line_klasses, _ => _[i] = [])
     },
@@ -629,7 +632,7 @@ export const make_lines = (pen: Pen, msg: string) => {
       _cursor.x = read(_arr)[_cursor.y].length
     },
     cursor_append() {
-      _cursor.x++
+      _cursor.x++;
     },
     motion(code: string) {
       let motion = key_motion.indexOf(code)
@@ -721,7 +724,7 @@ export const make_lines = (pen: Pen, msg: string) => {
         let line = _[_cursor.y]
         _[_cursor.y] = line.slice(0, m_x() - 1) + line.slice(m_x())
       })
-      _cursor.x = m_x() - 1
+      _cursor.x = _cursor.x - 1
     },
     insert(code: string) {
       write(_arr, _ => {
