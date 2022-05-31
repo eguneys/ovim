@@ -4,6 +4,14 @@ import { make_array, make_position } from './make_util'
 
 const key_motion = ['h', 'j', 'k', 'l', 'b', 'w', 'e', '$', '0']
 
+function indexes_between(n: number, m: number) {
+  let res = []
+  for (let i = n; i <= m; i++) {
+    res.push(i)
+  }
+  return res
+}
+
 function out_of_ctx(p: string, n: string, no_spaces: boolean) {
   let RE = no_spaces ? /[a-zA-Z0-9]/ : /[a-zA-Z0-9 ]/
   let w = !!p.match(/[a-zA-Z0-9]/),
@@ -296,6 +304,9 @@ export class Pen {
       case 'Escape':
         this.lines.escape()
         break
+      case 'y':
+        this.lines.set_yank()
+        break
       case 'g':
         this.lines.set_g()
         break
@@ -348,6 +359,7 @@ export class Pen {
 
 export const make_lines = (pen: Pen, msg: string) => {
 
+  let _yank_flag = createSignal(false)
   let _command_flag = createSignal(false)
   let _gg_flag = createSignal(false)
   let _replace = createSignal(false)
@@ -399,6 +411,29 @@ export const make_lines = (pen: Pen, msg: string) => {
   let m_cursor = createMemo(() => {
     return [m_x(), _cursor.y]
   })
+  createEffect(on(m_cursor, (c, pre_c) => {
+    if (read(_yank_flag)) {
+
+      owrite(_yank_flag, false)
+
+      if (c[1] === pre_c[1]) {
+        let min_x = Math.min(c[0], pre_c[0]),
+          max_x = Math.max(c[0], pre_c[0])
+        let line = read(_arr)[c[1]].slice(min_x, max_x)
+        owrite(_yank, line)
+      } else if (c[1] < pre_c[1]) {
+        let lines = indexes_between(c[1], pre_c[1]).map(_ =>
+                                            read(_arr)[_])
+        owrite(_yank, lines)
+      } else {
+        let lines = indexes_between(pre_c[1], c[1]).map(_ =>
+                                            read(_arr)[_])
+
+        owrite(_yank, lines)
+      }
+
+    }
+  }))
 
   createEffect(on(m_cursor, (c, pre_c) => {
     if (read(_delete)) {
@@ -495,6 +530,11 @@ export const make_lines = (pen: Pen, msg: string) => {
     }
   }
 
+  function yank_line() {
+
+    owrite(_yank, read(_arr)[_cursor.y])
+  }
+
 
   let a_line_klasses = createSignal([], { equals: false })
 
@@ -568,6 +608,17 @@ export const make_lines = (pen: Pen, msg: string) => {
       })
     },
     intercept_mode(code: string) {
+      if (read(_yank_flag)) {
+        if (code === 'g' || code === 'G') {
+        } else {
+          if (code === 'y') {
+            yank_line()
+            owrite(_yank_flag, false)
+          }
+          this.motion(code)
+          return true
+        }
+      } 
       if (read(_command_flag)) {
         if (code === 'Enter') {
           commit_command()
@@ -836,6 +887,7 @@ export const make_lines = (pen: Pen, msg: string) => {
       a_insert_undo = []
     },
     escape() {
+      owrite(_yank_flag, false)
       owrite(_command_flag, false)
       owrite(_gg_flag, false)
       owrite(_replace, false)
@@ -846,6 +898,9 @@ export const make_lines = (pen: Pen, msg: string) => {
     },
     set_g() {
       owrite(_gg_flag, true)
+    },
+    set_yank() {
+      owrite(_yank_flag, true)
     },
     half_page_move(dir: number) {
       let value = _cursor.y + pen.nb_lines() / 2 * dir
