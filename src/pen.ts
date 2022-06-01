@@ -228,6 +228,10 @@ export class Pen {
     } else if (e.ctrlKey) {
 
       switch (code) {
+        case 'v':
+          navigator.clipboard.readText().then(_ => this.lines.paste(_))
+          e.preventDefault()
+          break
         case 'h':
           this.lines.delete()
           e.preventDefault()
@@ -856,6 +860,13 @@ export const make_lines = (pen: Pen, msg: string) => {
         _[_cursor.y] = line.slice(0, m_x() - 1) + line.slice(m_x())
       })
       _cursor.x = _cursor.x - 1
+    },
+    paste(code: string) {
+      console.log(code)
+      code.split('\n').forEach((line, i) => {
+        if (i > 0) { this.newline() }
+        line.split('').forEach(_ => this.insert(_))
+      })
     },
     insert(code: string) {
       write(_arr, _ => {
