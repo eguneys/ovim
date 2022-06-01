@@ -1997,7 +1997,7 @@ const make_lines = (pen, msg) => {
     },
 
     half_page_move(dir) {
-      let value = _cursor.y + pen.nb_lines() / 2 * dir;
+      let value = _cursor.y + Math.floor(pen.nb_lines() / 2 * dir);
       _cursor.y = Math.min(read(_arr).length - 1, Math.max(0, value));
     }
 
