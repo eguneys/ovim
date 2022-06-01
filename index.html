@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <title> V Aid Prolog Teach machine chess rules. </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="icon" href="/">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300&Fredoka:wght@300&family=Poppins:wght@300&display=swap" rel="stylesheet">
+
+    <style>
+body, input {
+  padding: 0;
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+}
+
+#app {
+  position: relative;
+  width: min(100vw, calc(100vh * 16/9));
+  aspect-ratio: 16/9;
+}
+    </style>
+  <link rel="stylesheet" type="text/css" href="/bundle.css">
+</head>
+  <body>
+    <div id='app'></div>
+    <script>
+
+      document.addEventListener("DOMContentLoaded", () => {
+              let api = OVim(document.getElementById('app'), { 
+                      on_command(command, content) {
+                              //console.log(command, content)
+                            }})
+
+              setTimeout(() => {
+                      //console.log(api.content)
+                      api.line_klass(0, 'error')
+                      api.line_klass(3, 'error')
+                      api.line_klass(3, 'world')
+                      api.prompt = 'hello'
+                      setTimeout(() => {
+                              api.line_klass(3)
+                              api.prompt = ''
+                            }, 1000)
+                    }, 1000)
+      })
+    </script>
+  <script  src="/main.js"></script>
+</body>
+</html>
