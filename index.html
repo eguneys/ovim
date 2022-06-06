@@ -25,7 +25,7 @@ body, input {
   aspect-ratio: 16/9;
 }
     </style>
-  <link rel="stylesheet" type="text/css" href="/bundle.css">
+  <link rel="stylesheet" type="text/css" href="bundle.css">
 </head>
   <body>
     <div id='app'></div>
@@ -38,18 +38,20 @@ body, input {
                             }})
 
               setTimeout(() => {
+                console.log('cursor', api.cursor)
                       //console.log(api.content)
                       api.line_klass(0, 'error')
                       api.line_klass(3, 'error')
                       api.line_klass(3, 'world')
                       api.prompt = 'hello'
                       setTimeout(() => {
+                             api.cursor = [10, 10]
                               api.line_klass(3)
                               api.prompt = ''
                             }, 1000)
                     }, 1000)
       })
     </script>
-  <script  src="/main.js"></script>
+  <script  src="main.js"></script>
 </body>
 </html>

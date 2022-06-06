@@ -1124,6 +1124,14 @@ class Pen {
     this.lines.content = content;
   }
 
+  get cursor() {
+    return this.lines.cursor.vs.vs;
+  }
+
+  set cursor(cursor) {
+    this.lines.cursor = cursor;
+  }
+
   line_klasses(i) {
     return this.lines.line_klasses(i);
   }
@@ -1730,6 +1738,11 @@ const make_lines = (pen, msg) => {
         _cursor.x = 0;
         _cursor.y = 0;
       });
+    },
+
+    set cursor(cursor) {
+      _cursor.x = cursor[0];
+      _cursor.y = cursor[1];
     },
 
     break_line() {
@@ -2417,6 +2430,14 @@ function VPro(element, options = {}) {
 
     get content() {
       return pen.content;
+    },
+
+    get cursor() {
+      return pen.cursor;
+    },
+
+    set cursor(cursor) {
+      pen.cursor = cursor;
     },
 
     line_klass(i, v) {
