@@ -37,12 +37,14 @@ body, input {
                             }})
 
               setTimeout(() => {
+                console.log('cursor', api.cursor)
                       //console.log(api.content)
                       api.line_klass(0, 'error')
                       api.line_klass(3, 'error')
                       api.line_klass(3, 'world')
                       api.prompt = 'hello'
                       setTimeout(() => {
+                             api.cursor = [10, 10]
                               api.line_klass(3)
                               api.prompt = ''
                             }, 1000)

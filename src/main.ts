@@ -20,6 +20,12 @@ export default function VPro(element: HTMLElement, options = {}) {
     get content() {
       return pen.content
     },
+    get cursor() {
+      return pen.cursor
+    },
+    set cursor(cursor: [number, number]) {
+      pen.cursor = cursor
+    },
     line_klass(i: number, v: string) {
       if (!v) {
         pen.lines.clear_klass(i)

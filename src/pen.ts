@@ -110,6 +110,14 @@ export class Pen {
     this.lines.content = content
   }
 
+  get cursor() {
+    return this.lines.cursor.vs.vs
+  }
+
+  set cursor(cursor: [number, number]) {
+    this.lines.cursor = cursor
+  }
+
   line_klasses(i: number) {
     return this.lines.line_klasses(i)
   }
@@ -683,6 +691,10 @@ export const make_lines = (pen: Pen, msg: string) => {
         _cursor.x = 0
         _cursor.y = 0
       })
+    },
+    set cursor(cursor: [number, number]) {
+      _cursor.x = cursor[0]
+      _cursor.y = cursor[1]
     },
     break_line() {
 
