@@ -1,7 +1,7 @@
 import { onMount, onCleanup } from 'solid-js'
 
-let mode_text = ['', 'Normal', 'Insert']
-let mode_klass = ['', 'normal', 'insert']
+let mode_text = ['', 'Normal', 'Insert', 'Visual']
+let mode_klass = ['', 'normal', 'insert', 'visual']
 
 function format_char(char: string) {
   if (char === undefined || char === '') {
@@ -69,9 +69,28 @@ const Line = props => {
   let klass = () => (pen.line_klasses(props.i) || []).join(' ')
 
   return (<Show when={props.i === pen.lines.cursor.y}
-      fallback={<span class={klass()}>{format_char(props.line)}</span>}
-      >
+      fallback={
+        <Show when={pen.lines.visual(props.i)}
+        fallback= {<span class={klass()}>{format_char(props.line)}</span>} >{ visual =>
+          <span class={klass()}>
+          {props.line.slice(0, visual[0])}
+          <span class="visual">{props.line.slice(visual[0], visual[1])}</span>
+          {props.line.slice(visual[1])}
+          </span>
+        }</Show>
+      }>
+      <Show when={pen.lines.visual(props.i)}
+      fallback = {
       <span class={klass()}>{props.line.slice(0, pen.lines.cursor_x)}<span ref={_ => setTimeout(() => pen.$cursor_ref = _)} class='cursor'>{format_char(props.line[pen.lines.cursor_x])}</span>{props.line.slice(pen.lines.cursor_x+1)}</span>
+      }>{ visual =>
+          
+      <span class={klass()}>{props.line.slice(0, visual[0])}
+      <span class='visual'>
+      {props.line.slice(visual[0], pen.lines.cursor_x)}<span ref={_ => setTimeout(() => pen.$cursor_ref = _)} class='cursor'>{format_char(props.line[pen.lines.cursor_x])}</span>{props.line.slice(pen.lines.cursor_x+1, visual[1]+1)}
+      </span>
+      {props.line.slice(visual[1]+1)}
+      </span>
+      }</Show>
       </Show>)
 
 }

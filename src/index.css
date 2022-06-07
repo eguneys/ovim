@@ -15,6 +15,17 @@ vi-editor span {
   color: white;
 }
 
+vi-editor span.visual {
+  display: inline-block;
+  background: white;
+  color: #212121;
+}
+
+vi-editor span.visual .cursor {
+
+  background: orange;
+}
+
 vi-editor .cursor {
   display: inline-block;
   background: rgba(255, 255, 255, 1);
@@ -54,6 +65,11 @@ vi-editor .status .mode.insert {
 }
 
 vi-editor .status .mode.normal {
+}
+
+vi-editor .status .mode.visual {
+  background: orange;
+  color: red;
 }
 
 @keyframes blink {

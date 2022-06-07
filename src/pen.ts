@@ -228,6 +228,8 @@ export class Pen {
       this.normal_down(code, e)
     } else if (this.mode === 2) {
       this.insert_down(code, e)
+    } else if (this.mode === 3) {
+      this.visual_down(code, e)
     }
   }
 
@@ -270,6 +272,26 @@ export class Pen {
         break
       }
     }
+  }
+
+  visual_down(code: string, e: EventHandler) {
+    if (code === 'Escape') {
+      this.lines.escape()
+      this.mode = 1
+      this.lines.visual_clear()
+      return
+    }
+    switch (code) {
+      case 'y':
+        this.lines.visual_yank()
+        this.lines.visual_clear()
+        this.mode = 1
+        return
+        break
+      default:
+        this.lines.motion(code)
+    }
+    this.lines.visual_mark_end()
   }
 
   normal_down(code: string, e: EventHandler) {
@@ -362,6 +384,10 @@ export class Pen {
         this.lines.end_of_line()
         this.mode = 2
         break
+      case 'v':
+        this.lines.visual_mark()
+        this.mode = 3
+        break
       default:
         this.lines.motion(code)
     }
@@ -389,6 +415,11 @@ export const make_lines = (pen: Pen, msg: string) => {
   let _command = createSignal('')
 
   let a_insert_undo = []
+
+
+  let _visual_begin = createSignal()
+  let _visual_end = createSignal()
+
 
   function cursor_up() {
     _cursor.y--;
@@ -551,6 +582,59 @@ export const make_lines = (pen: Pen, msg: string) => {
   let a_line_klasses = createSignal([], { equals: false })
 
   return {
+    visual_yank() {
+      let b = read(_visual_begin),
+        e = read(_visual_end)
+
+      if (b && e) {
+
+        let lines = indexes_between(Math.min(b[1], e[1]),
+                        Math.max(b[1], e[1])).map(_ =>
+        read(_arr)[_])
+
+        owrite(_yank, lines)
+      }
+    },
+    visual_clear() {
+      owrite(_visual_begin)
+      owrite(_visual_end)
+    },
+    visual_mark_end() {
+      owrite(_visual_end, [_cursor.x, _cursor.y])
+    },
+    visual_mark() {
+      owrite(_visual_begin, [_cursor.x, _cursor.y])
+    },
+    visual(line: number) {
+      let b = read(_visual_begin),
+        e = read(_visual_end)
+
+      if (b && e) {
+        if (b[1] === line) {
+          let _line = read(_arr)[b[1]]
+          if (e[1] === b[1]) {
+            return [Math.min(b[0], e[0]), Math.max(b[0], e[0])]
+          } else if (b[1] < e[1]) {
+            return [b[0], _line.length]
+          } else if (b[1] > e[1]) {
+            return [0, b[0]]
+          }
+        } else if (e[1] === line) {
+          let _line = read(_arr)[e[1]]
+
+          if (b[1] < e[1]) {
+            return [0, e[0]]
+          } else if (b[1] > e[1]) {
+            return [e[0], _line.length]
+          }
+        } else if (b[1] < line && line < e[1] || (e[1] < line && line < b[1])) {
+
+          let _line = read(_arr)[line]
+          return [0, _line.length]
+        }
+      }
+    },
+
     clear_lines() {
       owrite(a_line_klasses, [])
     },
