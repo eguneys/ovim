@@ -1240,6 +1240,8 @@ class Pen {
       this.normal_down(code, e);
     } else if (this.mode === 2) {
       this.insert_down(code, e);
+    } else if (this.mode === 3) {
+      this.visual_down(code, e);
     }
   }
 
@@ -1288,6 +1290,28 @@ class Pen {
           break;
       }
     }
+  }
+
+  visual_down(code, e) {
+    if (code === 'Escape') {
+      this.lines.escape();
+      this.mode = 1;
+      this.lines.visual_clear();
+      return;
+    }
+
+    switch (code) {
+      case 'y':
+        this.lines.visual_yank();
+        this.lines.visual_clear();
+        this.mode = 1;
+        return;
+
+      default:
+        this.lines.motion(code);
+    }
+
+    this.lines.visual_mark_end();
   }
 
   normal_down(code, e) {
@@ -1408,6 +1432,11 @@ class Pen {
         this.mode = 2;
         break;
 
+      case 'v':
+        this.lines.visual_mark();
+        this.mode = 3;
+        break;
+
       default:
         this.lines.motion(code);
     }
@@ -1440,6 +1469,10 @@ const make_lines = (pen, msg) => {
   let _command = createSignal('');
 
   let a_insert_undo = [];
+
+  let _visual_begin = createSignal();
+
+  let _visual_end = createSignal();
 
   function cursor_down() {
     _cursor.y++;
@@ -1581,6 +1614,59 @@ const make_lines = (pen, msg) => {
     equals: false
   });
   return {
+    visual_yank() {
+      let b = read(_visual_begin),
+          e = read(_visual_end);
+
+      if (b && e) {
+        let lines = indexes_between(Math.min(b[1], e[1]), Math.max(b[1], e[1])).map(_ => read(_arr)[_]);
+        owrite(_yank, lines);
+      }
+    },
+
+    visual_clear() {
+      owrite(_visual_begin);
+      owrite(_visual_end);
+    },
+
+    visual_mark_end() {
+      owrite(_visual_end, [_cursor.x, _cursor.y]);
+    },
+
+    visual_mark() {
+      owrite(_visual_begin, [_cursor.x, _cursor.y]);
+    },
+
+    visual(line) {
+      let b = read(_visual_begin),
+          e = read(_visual_end);
+
+      if (b && e) {
+        if (b[1] === line) {
+          let _line = read(_arr)[b[1]];
+
+          if (e[1] === b[1]) {
+            return [Math.min(b[0], e[0]), Math.max(b[0], e[0])];
+          } else if (b[1] < e[1]) {
+            return [b[0], _line.length];
+          } else if (b[1] > e[1]) {
+            return [0, b[0]];
+          }
+        } else if (e[1] === line) {
+          let _line = read(_arr)[e[1]];
+
+          if (b[1] < e[1]) {
+            return [0, e[0]];
+          } else if (b[1] > e[1]) {
+            return [e[0], _line.length];
+          }
+        } else if (b[1] < line && line < e[1] || e[1] < line && line < b[1]) {
+          let _line = read(_arr)[line];
+          return [0, _line.length];
+        }
+      }
+    },
+
     clear_lines() {
       owrite(a_line_klasses, []);
     },
@@ -2020,9 +2106,11 @@ const make_lines = (pen, msg) => {
 const _tmpl$ = /*#__PURE__*/template(`<vi-editor tabindex="0"><div class="content"></div><div class="status"></div><div class="prompt"><span></span></div></vi-editor>`),
       _tmpl$2 = /*#__PURE__*/template(`<span>~</span>`),
       _tmpl$3 = /*#__PURE__*/template(`<span></span>`),
-      _tmpl$4 = /*#__PURE__*/template(`<span><span class="cursor"></span></span>`);
-let mode_text = ['', 'Normal', 'Insert'];
-let mode_klass = ['', 'normal', 'insert'];
+      _tmpl$4 = /*#__PURE__*/template(`<span><span class="visual"></span></span>`),
+      _tmpl$5 = /*#__PURE__*/template(`<span><span class="cursor"></span></span>`),
+      _tmpl$6 = /*#__PURE__*/template(`<span><span class="visual"><span class="cursor"></span></span></span>`);
+let mode_text = ['', 'Normal', 'Insert', 'Visual'];
+let mode_klass = ['', 'normal', 'insert', 'visual'];
 
 function format_char(char) {
   if (char === undefined || char === '') {
@@ -2132,32 +2220,87 @@ const Line = props => {
     },
 
     get fallback() {
-      return (() => {
-        const _el$11 = _tmpl$3.cloneNode(true);
+      return createComponent(Show, {
+        get when() {
+          return pen.lines.visual(props.i);
+        },
 
-        insert(_el$11, () => format_char(props.line));
+        get fallback() {
+          return (() => {
+            const _el$9 = _tmpl$3.cloneNode(true);
 
-        createRenderEffect(() => className(_el$11, klass()));
+            insert(_el$9, () => format_char(props.line));
 
-        return _el$11;
-      })();
+            createRenderEffect(() => className(_el$9, klass()));
+
+            return _el$9;
+          })();
+        },
+
+        children: visual => (() => {
+          const _el$10 = _tmpl$4.cloneNode(true),
+                _el$11 = _el$10.firstChild;
+
+          insert(_el$10, () => props.line.slice(0, visual[0]), _el$11);
+
+          insert(_el$11, () => props.line.slice(visual[0], visual[1]));
+
+          insert(_el$10, () => props.line.slice(visual[1]), null);
+
+          createRenderEffect(() => className(_el$10, klass()));
+
+          return _el$10;
+        })()
+      });
     },
 
     get children() {
-      const _el$9 = _tmpl$4.cloneNode(true),
-            _el$10 = _el$9.firstChild;
+      return createComponent(Show, {
+        get when() {
+          return pen.lines.visual(props.i);
+        },
 
-      insert(_el$9, () => props.line.slice(0, pen.lines.cursor_x), _el$10);
+        get fallback() {
+          return (() => {
+            const _el$12 = _tmpl$5.cloneNode(true),
+                  _el$13 = _el$12.firstChild;
 
-      (_ => setTimeout(() => pen.$cursor_ref = _))(_el$10);
+            insert(_el$12, () => props.line.slice(0, pen.lines.cursor_x), _el$13);
 
-      insert(_el$10, () => format_char(props.line[pen.lines.cursor_x]));
+            (_ => setTimeout(() => pen.$cursor_ref = _))(_el$13);
 
-      insert(_el$9, () => props.line.slice(pen.lines.cursor_x + 1), null);
+            insert(_el$13, () => format_char(props.line[pen.lines.cursor_x]));
 
-      createRenderEffect(() => className(_el$9, klass()));
+            insert(_el$12, () => props.line.slice(pen.lines.cursor_x + 1), null);
 
-      return _el$9;
+            createRenderEffect(() => className(_el$12, klass()));
+
+            return _el$12;
+          })();
+        },
+
+        children: visual => (() => {
+          const _el$14 = _tmpl$6.cloneNode(true),
+                _el$15 = _el$14.firstChild,
+                _el$16 = _el$15.firstChild;
+
+          insert(_el$14, () => props.line.slice(0, visual[0]), _el$15);
+
+          insert(_el$15, () => props.line.slice(visual[0], pen.lines.cursor_x), _el$16);
+
+          (_ => setTimeout(() => pen.$cursor_ref = _))(_el$16);
+
+          insert(_el$16, () => format_char(props.line[pen.lines.cursor_x]));
+
+          insert(_el$15, () => props.line.slice(pen.lines.cursor_x + 1, visual[1] + 1), null);
+
+          insert(_el$14, () => props.line.slice(visual[1] + 1), null);
+
+          createRenderEffect(() => className(_el$14, klass()));
+
+          return _el$14;
+        })()
+      });
     }
 
   });
